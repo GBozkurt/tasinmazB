@@ -1,46 +1,54 @@
-﻿namespace tasinmazz.Business.Conrete.Services
-{
-	using Microsoft.AspNetCore.Http;
-	using Microsoft.AspNetCore.Mvc;
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
-	using System.Security.Cryptography;
-	using System.Text;
-	using tasinmazz.Business.Abstract.Interfaces;
-	using tasinmazz.DataAccess.Conrete;
-	using tasinmazz.Entity.Conrete;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+using tasinmazz.Business.Abstract.Interfaces;
+using tasinmazz.DataAccess.Conrete;
+using tasinmazz.Entity.Conrete;
 
+namespace tasinmazz.Business.Conrete.Services
+{
 	public class UserService : UserInterface
 	{
-		private Context _context;
+		private readonly Context _context;
+
 		public UserService(Context context)
 		{
 			_context = context;
 		}
-		
-		public User Register(User userDetails,string password)
+
+		//KULLANICI KAYIT ETME
+		public async Task<User> RegisterAsync(User userDetails, string password)
 		{
 			byte[] passwordHash, passwordSalt;
-			if (CheckUser(userDetails.Email) == false)
+			if (!await CheckUserAsync(userDetails.Email))
 			{
 				CalculateSHA256(password, out passwordHash, out passwordSalt);
 				userDetails.PasswordHash = passwordHash;
 				userDetails.PasswordSalt = passwordSalt;
 
 				_context.User.Add(userDetails);
-				_context.SaveChanges();
+				await _context.SaveChangesAsync();
 
 				return userDetails;
 			}
 			return null;
 		}
 
-		public User UpdateUser(User userDetails, string password,int id)
+		//KULLANICI GÜNCELLEME
+		public async Task<User> UpdateUserAsync(User userDetails, string password, int id)
 		{
 			byte[] passwordHash, passwordSalt;
-			var  user = _context.User.Where(x=>x.Id==id).FirstOrDefault();
-			if(user.Email==userDetails.Email)
+			var user = await _context.User.FirstOrDefaultAsync(x => x.Id == id);
+			if (user == null)
+				return null;
+
+			if (user.Email == userDetails.Email)
 			{
 				CalculateSHA256(password, out passwordHash, out passwordSalt);
 				user.Name = userDetails.Name;
@@ -48,13 +56,13 @@
 				user.PasswordHash = passwordHash;
 				user.PasswordSalt = passwordSalt;
 				user.Role = userDetails.Role;
-				_context.SaveChanges();
+				await _context.SaveChangesAsync();
 
 				return user;
 			}
 			else
 			{
-				if (CheckUser(userDetails.Email) == false)
+				if (!await CheckUserAsync(userDetails.Email))
 				{
 					CalculateSHA256(password, out passwordHash, out passwordSalt);
 					user.Name = userDetails.Name;
@@ -63,7 +71,7 @@
 					user.PasswordSalt = passwordSalt;
 					user.Role = userDetails.Role;
 
-					_context.SaveChanges();
+					await _context.SaveChangesAsync();
 
 					return user;
 				}
@@ -71,12 +79,13 @@
 			}
 		}
 
-		public bool CheckUser(string username)
+		//KULLANICI EMAİLİ VAR MI KONTROLÜ
+		public async Task<bool> CheckUserAsync(string username)
 		{
-			if (_context.User.Any(x => x.Email == username)) { return true; }
-			return false;
+			return await _context.User.AnyAsync(x => x.Email == username);
 		}
 
+		//PAROLAYI HASH VE SALT HALE GETİRME
 		public void CalculateSHA256(string password, out byte[] passwordHash, out byte[] passwordSalt)
 		{
 			using (var hmac = new HMACSHA512())
@@ -86,63 +95,69 @@
 			}
 		}
 
-		public User Login(string username,string password)
+		//KULLANICI GİRİŞ İŞLEMİ
+		public async Task<User> LoginAsync(string username, string password)
 		{
-			var user = _context.User.FirstOrDefault( x=>x.Email==username);
-			if (user == null) { return null; }
-			if (!VerifyPasswordHash(password,user.PasswordHash,user.PasswordSalt)) { return null; }
+			var user = await _context.User.FirstOrDefaultAsync(x => x.Email == username);
+			if (user == null || !VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+				return null;
+
 			return user;
 		}
 
+		//GİRİLEN PAROLA DOĞRU MU KONTROLÜ
 		private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
 		{
 			using (var hmac = new HMACSHA512(passwordSalt))
 			{
 				var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-				for (int i = 0; i < computedHash.Length; i++)
-				{
-					if (computedHash[i] != passwordHash[i])
-					return false;
-				}
-				return true;
+				return computedHash.SequenceEqual(passwordHash);
 			}
 		}
 
-
-		public List<User> GetUser()
+		//KULLANICILARI LİSTELEME
+		public async Task<List<User>> GetUserAsync()
 		{
-			return _context.User.ToList();
+			return await _context.User.ToListAsync();
 		}
 
-		public User GetUserById(int id)
+		//KULLANICILARI ID'YE GÖRE LİSTELEME
+		public async Task<User> GetUserByIdAsync(int id)
 		{
-			return _context.User.FirstOrDefault(x => x.Id == id);
+			return await _context.User.FirstOrDefaultAsync(x => x.Id == id);
 		}
 
-		public List<User> GetUserByString(string secenek,string deger)
+		//KULLANICILARI ALANA GÖRE LİSTELEME
+		public async Task<List<User>> GetUserByStringAsync(string secenek, string deger)
 		{
-			var users= _context.User.ToList();
+			IQueryable<User> query = _context.User;
+
 			switch (secenek.ToLower())
 			{
 				case "isim":
-					users = _context.User.Where(x=> x.Name ==deger).ToList();
+					query = query.Where(x => x.Name == deger);
 					break;
 				case "email":
-					users = _context.User.Where(x=> x.Email == deger).ToList();
+					query = query.Where(x => x.Email == deger);
 					break;
 				case "rol":
-					users = _context.User.Where(x=> x.Role== deger).ToList();
+					query = query.Where(x => x.Role == deger);
 					break;
 			}
-			return users;
+
+			return await query.ToListAsync();
 		}
 
-		public User DeleteUser(int id)
+		//KULLANICI SİLME
+		public async Task<User> DeleteUserAsync(int id)
 		{
-			var a = _context.User.FirstOrDefault(x=> x.Id== id);
-			_context.User.Remove(a);
-			_context.SaveChanges();
-			return a;
+			var user = await _context.User.FirstOrDefaultAsync(x => x.Id == id);
+			if (user == null)
+				return null;
+
+			_context.User.Remove(user);
+			await _context.SaveChangesAsync();
+			return user;
 		}
 	}
 }

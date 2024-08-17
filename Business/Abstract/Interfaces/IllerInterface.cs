@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using tasinmazz.Entity.Conrete;
 
 namespace tasinmazz.Business.Abstract.Interfaces
 {
 	public interface IllerInterface
 	{
-
-		List<Il> GetAllIl();
-		List<Il> GetAllIlById(int id);
+		Task<List<Il>> GetAllIlAsync();
+		Task<List<Il>> GetAllIlByIdAsync(int id);
 	}
 }

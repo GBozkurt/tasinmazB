@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using System.Threading.Tasks;
 using tasinmazz.Business.Abstract.Interfaces;
-using tasinmazz.Business.Conrete.Services;
 using tasinmazz.Entity.Conrete;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -17,58 +17,66 @@ namespace tasinmazz.Controllers
 	public class UserController : ControllerBase
 	{
 		private readonly IConfiguration _configuration;
-		private  UserInterface _userService;
+		private readonly UserInterface _userService;
+
 		public UserController(UserInterface userInterface, IConfiguration configuration)
 		{
 			_configuration = configuration;
 			_userService = userInterface;
 		}
+
 		[HttpPost("register")]
-		public ActionResult<User> Register([FromBody] UserForRegister user)
+		public async Task<ActionResult<User>> Register([FromBody] UserForRegister user)
 		{
-			if (_userService.CheckUser(user.username))
+			if (await _userService.CheckUserAsync(user.username))
 			{
 				ModelState.AddModelError("Username", "Username already exists");
 			}
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState);
-			}
-			var userToCreate = new User
-			{
-				Name= user.name,
-				Email = user.username,
-				Role = user.role
-			};
-			var newUser = _userService.Register(userToCreate,user.password);
-			return Ok(newUser);
-		}
 
-		[HttpPut]
-		public ActionResult<User> UpdateUser([FromBody] UserForRegister user,int id)
-		{
 			if (!ModelState.IsValid)
 			{
 				return BadRequest(ModelState);
 			}
+
 			var userToCreate = new User
 			{
 				Name = user.name,
 				Email = user.username,
 				Role = user.role
 			};
-			var newUser = _userService.UpdateUser(userToCreate, user.password,id);
+
+			var newUser = await _userService.RegisterAsync(userToCreate, user.password);
 			return Ok(newUser);
 		}
 
-		[HttpPost("login")]
-		public ActionResult<string> Login([FromBody] UserForLogin user)
+		[HttpPut]
+		public async Task<ActionResult<User>> UpdateUser([FromBody] UserForRegister user, int id)
 		{
-			var checkUser = _userService.Login(user.username,user.password);
-			if (checkUser ==null)
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
+
+			var userToUpdate = new User
+			{
+				Name = user.name,
+				Email = user.username,
+				Role = user.role
+			};
+
+			var updatedUser = await _userService.UpdateUserAsync(userToUpdate, user.password, id);
+			return Ok(updatedUser);
+		}
+
+		[HttpPost("login")]
+		public async Task<ActionResult<string>> Login([FromBody] UserForLogin user)
+		{
+			var checkUser = await _userService.LoginAsync(user.username, user.password);
+			if (checkUser == null)
 			{
 				return Unauthorized();
 			}
+
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var key = Encoding.ASCII.GetBytes(_configuration.GetSection("AppSettings:Token").Value);
 			var tokenDescriptor = new SecurityTokenDescriptor
@@ -79,58 +87,67 @@ namespace tasinmazz.Controllers
 					new Claim(ClaimTypes.Name, checkUser.Email)
 				}),
 				Expires = DateTime.Now.AddDays(1),
-				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),SecurityAlgorithms.HmacSha512Signature)
+				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
 			};
 
 			var token = tokenHandler.CreateToken(tokenDescriptor);
-			var tokenString =  tokenHandler.WriteToken(token);
-
+			var tokenString = tokenHandler.WriteToken(token);
 
 			return Ok(new { Token = tokenString });
 		}
 
-
 		[HttpGet]
-		public ActionResult<List<User>> GetUser()
+		public async Task<ActionResult<List<User>>> GetUser()
 		{
-			var userList = _userService.GetUser();
+			var userList = await _userService.GetUserAsync();
 			return Ok(userList);
 		}
 
 		[HttpGet("GetUserRole")]
-		public ActionResult <String> GetUserRoleById(int id)
+		public async Task<ActionResult<string>> GetUserRoleById(int id)
 		{
-			string userList = _userService.GetUserById(id).Role;
-			return Ok(userList);
+			var user = await _userService.GetUserByIdAsync(id);
+			if (user == null)
+			{
+				return NotFound();
+			}
+			return Ok(user.Role);
 		}
 
 		[HttpGet("GetUserIp")]
-		public ActionResult<String> GetUserIp()
+		public ActionResult<string> GetUserIp()
 		{
 			var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 			return Ok(ipAddress);
 		}
 
-
 		[HttpGet("GetUserById")]
-		public ActionResult<User> GetUserById(int id)
+		public async Task<ActionResult<User>> GetUserById(int id)
 		{
-			var user = _userService.GetUserById(id);
+			var user = await _userService.GetUserByIdAsync(id);
+			if (user == null)
+			{
+				return NotFound();
+			}
 			return Ok(user);
 		}
 
 		[HttpGet("GetUserByString")]
-		public ActionResult<User> GetUserByString(string secenek,string deger)
+		public async Task<ActionResult<List<User>>> GetUserByString(string secenek, string deger)
 		{
-			var users= _userService.GetUserByString(secenek, deger);
+			var users = await _userService.GetUserByStringAsync(secenek, deger);
 			return Ok(users);
 		}
 
 		[HttpDelete]
-		public ActionResult DeleteUser(int id)
+		public async Task<ActionResult<User>> DeleteUser(int id)
 		{
-			var a =_userService.DeleteUser(id);
-			return Ok(a);
+			var user = await _userService.DeleteUserAsync(id);
+			if (user == null)
+			{
+				return NotFound();
+			}
+			return Ok(user);
 		}
 	}
 }

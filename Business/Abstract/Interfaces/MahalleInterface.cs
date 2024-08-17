@@ -1,16 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using tasinmazz.Entity.Conrete;
 
 namespace tasinmazz.Business.Abstract.Interfaces
 {
 	public interface MahalleInterface
 	{
-
-
-		List<Mahalle> GetAllMahalle();
-		Mahalle GetMahalleById(int id);
-		Mahalle GetMahalleByAdi(string adi);
-		List<Mahalle> GetAllMahalleByIlceId(int id);
-
+		Task<List<Mahalle>> GetAllMahalleAsync();
+		Task<Mahalle> GetMahalleByIdAsync(int id);
+		Task<List<Mahalle>> GetAllMahalleByIlceIdAsync(int id);
 	}
 }

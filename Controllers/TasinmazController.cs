@@ -1,42 +1,39 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using tasinmazz.Business.Abstract.Interfaces;
-using tasinmazz.Business.Conrete.Services;
-using tasinmazz.DataAccess.Conrete;
 using tasinmazz.Entity.Conrete;
 
 namespace tasinmazz.Controllers
 {
-    [Route("api/[controller]")]
+	[Route("api/[controller]")]
 	[ApiController]
 	public class TasinmazController : ControllerBase
 	{
 		private readonly TasinmazInterface _tasinmazService;
+
 		public TasinmazController(TasinmazInterface tasinmazService)
 		{
 			_tasinmazService = tasinmazService;
 		}
 
-
 		[HttpGet]
-		public ActionResult<List<Tasinmaz>>GetAllTasinmaz()
+		public async Task<ActionResult<List<Tasinmaz>>> GetAllTasinmaz()
 		{
-			var tasinmazList =_tasinmazService.GetAllTasinmaz();
-			return tasinmazList;
+			var tasinmazList = await _tasinmazService.GetAllTasinmazAsync();
+			return Ok(tasinmazList);
 		}
 
 		[HttpGet("GetTasinmazById")]
-		public ActionResult<Tasinmaz> GetTasinmazById(int id)
+		public async Task<ActionResult<Tasinmaz>>	GetTasinmazById(int id)
 		{
 			if (id == 0)
 			{
-				return BadRequest(); ;
+				return BadRequest();
 			}
-			var tasinmaz = _tasinmazService.GetTasinmazById(id);
+
+			var tasinmaz = await _tasinmazService.GetTasinmazByIdAsync(id);
 
 			if (tasinmaz == null)
 			{
@@ -47,13 +44,14 @@ namespace tasinmazz.Controllers
 		}
 
 		[HttpGet("GetTasinmazByUserId")]
-		public ActionResult<List<Tasinmaz>> GetTasinmazByUserId(int id)
+		public async Task<ActionResult<List<Tasinmaz>>> GetTasinmazByUserId(int id)
 		{
 			if (id == 0)
 			{
-				return BadRequest(); ;
+				return BadRequest();
 			}
-			var tasinmaz = _tasinmazService.GetTasinmazByUserId(id);
+
+			var tasinmaz = await _tasinmazService.GetTasinmazByUserIdAsync(id);
 
 			if (tasinmaz == null)
 			{
@@ -63,74 +61,63 @@ namespace tasinmazz.Controllers
 			return Ok(tasinmaz);
 		}
 
-
 		[HttpGet("GetTasinmazByString")]
-		public ActionResult<List<Tasinmaz>> GetTasinmazByString(string secenek, string deger)
+		public async Task<ActionResult<List<Tasinmaz>>> GetTasinmazByString(string secenek, string deger)
 		{
-			if (deger == null && secenek == null)
+			if (string.IsNullOrEmpty(deger) || string.IsNullOrEmpty(secenek))
 			{
-				return BadRequest(); ;
+				return BadRequest();
 			}
-			var TasinmazDetails = _tasinmazService.GetTasinmazByString(secenek,deger);
 
-			if (TasinmazDetails == null)
+			var tasinmazDetails = await _tasinmazService.GetTasinmazByStringAsync(secenek, deger);
+
+			if (tasinmazDetails == null)
 			{
 				return NotFound();
 			}
 
-			return TasinmazDetails;
+			return Ok(tasinmazDetails);
 		}
 
 		[HttpPost("AddTasinmaz")]
-		public ActionResult<Tasinmaz> AddTasinmaz([FromBody] Tasinmaz tasinmazDetails)
+		public async Task<ActionResult<Tasinmaz>> AddTasinmaz([FromBody] Tasinmaz tasinmazDetails)
 		{
-			if (!ModelState.IsValid) {  return BadRequest(); }
-			var yeniTasinmaz = _tasinmazService.AddTasinmaz(tasinmazDetails);
+			if (!ModelState.IsValid)
+			{
+				return BadRequest();
+			}
+
+			var yeniTasinmaz = await _tasinmazService.AddTasinmazAsync(tasinmazDetails);
 			return Ok(yeniTasinmaz);
 		}
 
 		[HttpPut("UpdateTasinmaz")]
-		public ActionResult<Tasinmaz> UpdateTasinmaz(int id, [FromBody] Tasinmaz tasinmazDetails)
+		public async Task<ActionResult<Tasinmaz>> UpdateTasinmaz(int id, [FromBody] Tasinmaz tasinmazDetails)
 		{
 			if (tasinmazDetails == null)
 			{
 				return BadRequest(ModelState);
 			}
-			var yeniTasinmaz = _tasinmazService.UpdateTasinmaz(id, tasinmazDetails);
-			return Ok(yeniTasinmaz);
-		}
 
-		[HttpDelete("DeleteTasinmaz")]
-		public ActionResult<Tasinmaz> DeleteTasinmaz(int id)
-		{
-
-			var SilinecekTasinmaz = _tasinmazService.DeleteTasinmaz(id);
-			if (SilinecekTasinmaz == null)
+			var updatedTasinmaz = await _tasinmazService.UpdateTasinmazAsync(id, tasinmazDetails);
+			if (updatedTasinmaz == null)
 			{
 				return NotFound();
 			}
-			return Ok(SilinecekTasinmaz);
+
+			return Ok(updatedTasinmaz);
 		}
 
-		[HttpGet("GetAda")]
-		public ActionResult<List<string>> GetAllAda()
+		[HttpDelete("DeleteTasinmaz")]
+		public async Task<ActionResult<Tasinmaz>> DeleteTasinmaz(int id)
 		{
-			var adaList = _tasinmazService.GetAllAda();
-			return adaList;
-		}
+			var silinecekTasinmaz = await _tasinmazService.DeleteTasinmazAsync(id);
+			if (silinecekTasinmaz == null)
+			{
+				return NotFound();
+			}
 
-		[HttpGet("GetNitelik")]
-		public ActionResult<List<string>> GetAllNitelik()
-		{
-			var nitelikList = _tasinmazService.GetAllNitelik();
-			return nitelikList;
-		}
-
-		[HttpGet("GetParsel")]
-		public ActionResult<List<string>> GetAllParsel()
-		{
-			var parselList = _tasinmazService.GetAllParsel();
-			return parselList;
+			return Ok(silinecekTasinmaz);
 		}
 	}
 }

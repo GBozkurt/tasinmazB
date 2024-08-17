@@ -5,10 +5,10 @@ namespace tasinmazz.Entity.Conrete
 {
 	public class Log
 	{
-		public int Id { get; set; }
+		public int? Id { get; set; }
 
 		[Required]
-		public int UserId { get; set; }
+		public int? UserId { get; set; }
 
 		[Required]
 		public string Durum { get; set; }

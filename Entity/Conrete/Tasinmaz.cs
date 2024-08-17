@@ -6,11 +6,11 @@ namespace tasinmazz.Entity.Conrete
 {
 	public class Tasinmaz
 	{
-		public int Id { get; set; }
+		public int? Id { get; set; }
 
 		[Required]
 		[ForeignKey("MahalleId")]
-		public int MahalleId { get; set; }
+		public int? MahalleId { get; set; }
 		[AllowNull]
 		public virtual Mahalle Mahalle { get; set; }
 		[Required]
@@ -23,7 +23,7 @@ namespace tasinmazz.Entity.Conrete
 		public string KoordinatBilgileri { get; set; }
 		[Required]
 		[ForeignKey("UserId")]
-		public int UserId { get; set; }
+		public int? UserId { get; set; }
 		[AllowNull]
 		public virtual User User { get; set; }
 	}

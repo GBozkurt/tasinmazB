@@ -1,15 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using tasinmazz.Business.Abstract.Interfaces;
-using tasinmazz.DataAccess.Conrete;
 using tasinmazz.Entity.Conrete;
 
 namespace tasinmazz.Controllers
 {
-    [Route("api/[controller]")]
+	[Route("api/[controller]")]
 	[ApiController]
 	public class IlceController : ControllerBase
 	{
@@ -20,21 +17,23 @@ namespace tasinmazz.Controllers
 		}
 
 		[HttpGet]
-		public ActionResult<List<Ilce>> GetAllIlce()
+		public async Task<ActionResult<List<Ilce>>> GetAllIlce()
 		{
-			var ilceler = _ilceInterface.GetAllIlce();
+			var ilceler = await _ilceInterface.GetAllIlceAsync();
 			return Ok(ilceler);
 		}
+
 		[HttpGet("GetIlceById")]
-		public ActionResult<List<Ilce>> GetAllIlceById(int id)
+		public async Task<ActionResult<List<Ilce>>> GetAllIlceById(int id)
 		{
-			var ilce = _ilceInterface.GetAllIlceById(id);
+			var ilce = await _ilceInterface.GetAllIlceByIdAsync(id);
 			return Ok(ilce);
 		}
+
 		[HttpGet("GetIlceByIlId")]
-		public ActionResult<List<Ilce>> GetAllIlceByIlId(int id)
+		public async Task<ActionResult<List<Ilce>>> GetAllIlceByIlId(int id)
 		{
-			var ilce = _ilceInterface.GetAllIlceByIlId(id);
+			var ilce = await _ilceInterface.GetAllIlceByIlIdAsync(id);
 			return Ok(ilce);
 		}
 	}

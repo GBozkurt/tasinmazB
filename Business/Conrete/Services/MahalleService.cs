@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using tasinmazz.Business.Abstract.Interfaces;
 using tasinmazz.DataAccess.Conrete;
 using tasinmazz.Entity.Conrete;
@@ -10,33 +10,28 @@ namespace tasinmazz.Business.Conrete.Services
 {
 	public class MahalleService : MahalleInterface
 	{
-		private Context _context;
+		private readonly Context _context;
 		public MahalleService(Context context)
 		{
 			_context = context;
 		}
 
-		public List<Mahalle> GetAllMahalle()
+		//MAHALLELERİ LİSTELEME
+		public async Task<List<Mahalle>> GetAllMahalleAsync()
 		{
-			return _context.Mahalleler.Include(t => t.Ilce).ThenInclude(l => l.Il).ToList();
+			return await _context.Mahalleler.Include(t => t.Ilce).ThenInclude(l => l.Il).ToListAsync();
 		}
 
-		
-		public Mahalle GetMahalleById(int id)
+		//MAHALLELERİ ID'YE GÖRE LİSTELEME
+		public async Task<Mahalle> GetMahalleByIdAsync(int id)
 		{
-			return _context.Mahalleler.Include(t => t.Ilce).ThenInclude(l => l.Il).Where(x => x.Id == id).FirstOrDefault();
+			return await _context.Mahalleler.Include(t => t.Ilce).ThenInclude(l => l.Il).Where(x => x.Id == id).FirstOrDefaultAsync();
 		}
 
-		public Mahalle GetMahalleByAdi(string adi)
+		//MAHALLELERİ İLÇE ID'YE GÖRE LİSTELEME
+		public async Task<List<Mahalle>> GetAllMahalleByIlceIdAsync(int id)
 		{
-			return _context.Mahalleler.Where(x => x.MahalleAdi == adi).FirstOrDefault();
+			return await _context.Mahalleler.Include(t => t.Ilce).Where(x => x.IlceId == id).ToListAsync();
 		}
-
-		public List<Mahalle> GetAllMahalleByIlceId(int id)
-		{
-			return _context.Mahalleler.Include(t => t.Ilce).Where(x => x.IlceId == id).ToList();
-		}
-
-
 	}
 }

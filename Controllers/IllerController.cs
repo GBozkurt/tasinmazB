@@ -1,15 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using tasinmazz.Business.Abstract.Interfaces;
-using tasinmazz.DataAccess.Conrete;
 using tasinmazz.Entity.Conrete;
 
 namespace tasinmazz.Controllers
 {
-    [Route("api/[controller]")]
+	[Route("api/[controller]")]
 	[ApiController]
 	public class IllerController : ControllerBase
 	{
@@ -20,17 +17,17 @@ namespace tasinmazz.Controllers
 		}
 
 		[HttpGet]
-		public ActionResult<List<Il>> GetAllIl()
+		public async Task<ActionResult<List<Il>>> GetAllIl()
 		{
-			var iller = _illerService.GetAllIl();
+			var iller = await _illerService.GetAllIlAsync();
 			return Ok(iller);
 		}
+
 		[HttpGet("GetIlById")]
-		public ActionResult<List<Il>>GetAllIlById(int id)
+		public async Task<ActionResult<List<Il>>> GetAllIlById(int id)
 		{
-			var il = _illerService.GetAllIlById(id);
+			var il = await _illerService.GetAllIlByIdAsync(id);
 			return Ok(il);
 		}
 	}
-	
 }

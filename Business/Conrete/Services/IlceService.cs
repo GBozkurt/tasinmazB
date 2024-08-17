@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using tasinmazz.Business.Abstract.Interfaces;
 using tasinmazz.DataAccess.Conrete;
 using tasinmazz.Entity.Conrete;
@@ -10,26 +10,28 @@ namespace tasinmazz.Business.Conrete.Services
 {
 	public class IlceService : IlceInterface
 	{
-		private Context _context;
+		private readonly Context _context;
 		public IlceService(Context context)
 		{
 			_context = context;
 		}
 
-
-
-		public List<Ilce> GetAllIlce()
+		//İLÇELERİ LİSTELEME
+		public async Task<List<Ilce>> GetAllIlceAsync()
 		{
-			return _context.Ilceler.Include(t => t.Il).ToList();
+			return await _context.Ilceler.Include(t => t.Il).ToListAsync();
 		}
-		
-		public List<Ilce> GetAllIlceById(int id)
+
+		//İLÇELERİ ID'YE GÖRE LİSTELEME
+		public async Task<List<Ilce>> GetAllIlceByIdAsync(int id)
 		{
-			return _context.Ilceler.Include(t => t.Il).Where(x => x.Id == id).ToList();
+			return await _context.Ilceler.Include(t => t.Il).Where(x => x.Id == id).ToListAsync();
 		}
-		public List<Ilce> GetAllIlceByIlId(int id)
+
+		//İLÇELERİ İL ID'YE GÖRE LİSTELEME
+		public async Task<List<Ilce>> GetAllIlceByIlIdAsync(int id)
 		{
-			return _context.Ilceler.Include(t => t.Il).Where(x => x.IlId == id).ToList();
+			return await _context.Ilceler.Include(t => t.Il).Where(x => x.IlId == id).ToListAsync();
 		}
 	}
 }

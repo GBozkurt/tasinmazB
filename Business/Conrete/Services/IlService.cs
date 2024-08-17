@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using tasinmazz.Business.Abstract.Interfaces;
 using tasinmazz.DataAccess.Conrete;
 using tasinmazz.Entity.Conrete;
@@ -8,21 +10,22 @@ namespace tasinmazz.Business.Conrete.Services
 {
 	public class IlService : IllerInterface
 	{
-		private Context _context;
+		private readonly Context _context;
 		public IlService(Context context)
 		{
 			_context = context;
 		}
 
-		public List<Il> GetAllIl()
+		//İLLERİ LİSTELEME
+		public async Task<List<Il>> GetAllIlAsync()
 		{
-			return _context.Iller.ToList();
+			return await _context.Iller.ToListAsync();
 		}
 
-		public List<Il> GetAllIlById(int id)
+		//İLLERİ İD'YE GÖRE LİSTELEME
+		public async Task<List<Il>> GetAllIlByIdAsync(int id)
 		{
-			return _context.Iller.Where(x => x.Id == id).ToList();
+			return await _context.Iller.Where(x => x.Id == id).ToListAsync();
 		}
 	}
 }
-

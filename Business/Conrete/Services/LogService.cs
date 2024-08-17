@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using tasinmazz.Business.Abstract.Interfaces;
 using tasinmazz.DataAccess.Conrete;
 using tasinmazz.Entity.Conrete;
@@ -9,66 +11,72 @@ namespace tasinmazz.Business.Conrete.Services
 {
 	public class LogService : LogInterface
 	{
-		private Context _context;
+		private readonly Context _context;
 		public LogService(Context context)
 		{
 			_context = context;
 		}
 
-
-		public List<Log> GetLogs()
+		//LOGLARI LİSTELEME
+		public async Task<List<Log>> GetLogsAsync()
 		{
-			var logs = _context.Log.ToList();
-			return logs;
+			return await _context.Log.ToListAsync();
 		}
 
-		public Log GetLogById(int id)
+		//LOGLARI ID'YE GÖRE LİSTELEME
+		public async Task<Log> GetLogByIdAsync(int id)
 		{
-			var log = _context.Log.FirstOrDefault(x=> x.Id == id);
-			return log;
+			return await _context.Log.FirstOrDefaultAsync(x => x.Id == id);
 		}
 
-		public Log PostLog(Log log)
+		//LOGLARI ALANLARA GÖRE LİSTELEME
+		public async Task<List<Log>> GetLogsByStringAsync(string secenek, string deger)
 		{
-			
-			_context.Log.Add(log);
-			_context.SaveChanges();
-			return log;
-		}
-
-		public List<Log> GetLogsByString( string secenek, string deger)
-		{
-			var logs = _context.Log.ToList();
+			var logs = await _context.Log.ToListAsync();
 
 			switch (secenek.ToLower())
 			{
 				case "kullaniciid":
-					logs = _context.Log.Where(x=>x.UserId==Convert.ToInt32(deger)).ToList();
+					logs = await _context.Log.Where(x => x.UserId == Convert.ToInt32(deger)).ToListAsync();
 					break;
 				case "durum":
-					logs = _context.Log.Where(x=>x.Durum == deger).ToList(); break;
+					logs = await _context.Log.Where(x => x.Durum == deger).ToListAsync();
+					break;
 				case "islem":
-					logs = _context.Log.Where(x=>x.IslemTip==deger ).ToList(); break;
+					logs = await _context.Log.Where(x => x.IslemTip == deger).ToListAsync();
+					break;
 				case "aciklama":
-					logs = _context.Log.Where(x=> x.Aciklama.Contains(deger) ).ToList(); break;
+					logs = await _context.Log.Where(x => x.Aciklama.Contains(deger)).ToListAsync();
+					break;
 				case "tarih":
 					DateTime targetDateTime = DateTime.Parse(deger);
-					logs = _context.Log.Where(x => x.TarihSaat.Year == targetDateTime.Year &&
-				x.TarihSaat.Month == targetDateTime.Month &&
-				x.TarihSaat.Day == targetDateTime.Day)
-				.ToList(); break;
+					logs = await _context.Log.Where(x => x.TarihSaat.Year == targetDateTime.Year &&
+						x.TarihSaat.Month == targetDateTime.Month &&
+						x.TarihSaat.Day == targetDateTime.Day)
+						.ToListAsync();
+					break;
 				case "kullaniciip":
-					logs = _context.Log.Where(x=>x.KullaniciIp==deger).ToList(); break;
+					logs = await _context.Log.Where(x => x.KullaniciIp == deger).ToListAsync();
+					break;
 			}
 			return logs;
-		} 
+		}
 
-		public Log DeleteLog(int id)
+		//LOG KAYDI EKLEME
+		public async Task<Log> PostLogAsync(Log log)
 		{
-			var log = _context.Log.FirstOrDefault(x => x.Id == id);
+			_context.Log.Add(log);
+			await _context.SaveChangesAsync();
+			return log;
+		}
+
+		//LOG SİLME
+		public async Task<Log> DeleteLogAsync(int id)
+		{
+			var log = await _context.Log.FirstOrDefaultAsync(x => x.Id == id);
 			_context.Log.Remove(log);
-			_context.SaveChanges();
-			return log;	
+			await _context.SaveChangesAsync();
+			return log;
 		}
 	}
 }

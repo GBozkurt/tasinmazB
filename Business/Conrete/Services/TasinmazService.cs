@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using tasinmazz.Business.Abstract.Interfaces;
 using tasinmazz.DataAccess.Conrete;
 using tasinmazz.Entity.Conrete;
@@ -11,75 +11,82 @@ namespace tasinmazz.Business.Conrete.Services
 {
 	public class TasinmazService : TasinmazInterface
 	{
-		//DB CONNECTİON
-		private Context _context;
+		private readonly Context _context;
+
 		public TasinmazService(Context context)
 		{
 			_context = context;
 		}
 
-		//TAŞINMAZLARI LİSTELE
-		public List<Tasinmaz> GetAllTasinmaz()
+		//TAŞINMAZLARI LİSTELEME
+		public async Task<List<Tasinmaz>> GetAllTasinmazAsync()
 		{
-			return _context.Tasinmaz.Include(t => t.Mahalle).ThenInclude(k => k.Ilce).ThenInclude(l => l.Il).ToList();
-		}
-
-
-		//TAŞINMAZLARI ID'YE GÖRE LİSTELE
-		public Tasinmaz GetTasinmazById(int id)
-		{
-			return _context.Tasinmaz
+			return await _context.Tasinmaz
 				.Include(t => t.Mahalle)
 				.ThenInclude(k => k.Ilce)
 				.ThenInclude(l => l.Il)
-				.FirstOrDefault(x => x.Id == id);
+				.ToListAsync();
 		}
 
-		public List<Tasinmaz> GetTasinmazByUserId(int id)
+		//TAŞINMAZLARI ID'YE GÖRE LİSTELEME
+		public async Task<Tasinmaz> GetTasinmazByIdAsync(int id)
 		{
-			return _context.Tasinmaz
+			return await _context.Tasinmaz
 				.Include(t => t.Mahalle)
 				.ThenInclude(k => k.Ilce)
 				.ThenInclude(l => l.Il)
-				.Where(x => x.UserId == id).ToList();
+				.FirstOrDefaultAsync(x => x.Id == id);
 		}
 
-		//TAŞINMAZLARI İL,İLÇE VB.'YE GÖRE LİSTELE
-		public List<Tasinmaz> GetTasinmazByString(string secenek, string deger)
+		//TAŞINMAZLARI KULLANICI ID'SİNE GÖRE LİSTELEME
+		public async Task<List<Tasinmaz>> GetTasinmazByUserIdAsync(int id)
 		{
-			
-			var TasinmazDetails = _context.Tasinmaz.ToList();
+			return await _context.Tasinmaz
+				.Include(t => t.Mahalle)
+				.ThenInclude(k => k.Ilce)
+				.ThenInclude(l => l.Il)
+				.Where(x => x.UserId == id)
+				.ToListAsync();
+		}
+
+		//TAŞINMAZLARI ALANA GÖRE LİSTELEME
+		public async Task<List<Tasinmaz>> GetTasinmazByStringAsync(string secenek, string deger)
+		{
+			IQueryable<Tasinmaz> query = _context.Tasinmaz
+				.Include(t => t.Mahalle)
+				.ThenInclude(k => k.Ilce)
+				.ThenInclude(l => l.Il);
+
 			switch (secenek.ToLower())
 			{
 				case "il":
-					TasinmazDetails = _context.Tasinmaz.Include(t => t.Mahalle).ThenInclude(k => k.Ilce).ThenInclude(l => l.Il).Where(t => t.Mahalle.Ilce.Il.IlAdi == deger).ToList();
+					query = query.Where(t => t.Mahalle.Ilce.Il.IlAdi == deger);
 					break;
 				case "ilce":
-					TasinmazDetails = _context.Tasinmaz.Include(t => t.Mahalle).ThenInclude(k => k.Ilce).ThenInclude(l => l.Il).Where(t => t.Mahalle.Ilce.IlceAdi == deger).ToList();
+					query = query.Where(t => t.Mahalle.Ilce.IlceAdi == deger);
 					break;
 				case "mahalle":
-					TasinmazDetails = _context.Tasinmaz.Include(t => t.Mahalle).ThenInclude(k => k.Ilce).ThenInclude(l => l.Il).Where(t => t.Mahalle.MahalleAdi == deger).ToList();
+					query = query.Where(t => t.Mahalle.MahalleAdi == deger);
 					break;
 				case "ada":
-					TasinmazDetails = _context.Tasinmaz.Include(t => t.Mahalle).ThenInclude(k => k.Ilce).ThenInclude(l => l.Il).Where(t => t.Ada == deger).ToList();
+					query = query.Where(t => t.Ada == deger);
 					break;
 				case "parsel":
-					TasinmazDetails = _context.Tasinmaz.Include(t => t.Mahalle).ThenInclude(k => k.Ilce).ThenInclude(l => l.Il).Where(t => t.Parsel == deger).ToList();
+					query = query.Where(t => t.Parsel == deger);
 					break;
 				case "nitelik":
-					TasinmazDetails = _context.Tasinmaz.Include(t => t.Mahalle).ThenInclude(k => k.Ilce).ThenInclude(l => l.Il).Where(t => t.Nitelik == deger).ToList();
+					query = query.Where(t => t.Nitelik == deger);
 					break;
 				case "koordinatbilgileri":
-					TasinmazDetails = _context.Tasinmaz.Include(t => t.Mahalle).ThenInclude(k => k.Ilce).ThenInclude(l => l.Il).Where(t => t.KoordinatBilgileri == deger).ToList();
+					query = query.Where(t => t.KoordinatBilgileri == deger);
 					break;
 			}
 
-
-			return TasinmazDetails;
+			return await query.ToListAsync();
 		}
 
-		//TAŞINMAZ EKLE
-		public Tasinmaz AddTasinmaz([FromBody] Tasinmaz tasinmazDetails)
+		//TAŞINMMAZ EKLEME
+		public async Task<Tasinmaz> AddTasinmazAsync([FromBody] Tasinmaz tasinmazDetails)
 		{
 			var yeniTasinmaz = new Tasinmaz
 			{
@@ -92,62 +99,38 @@ namespace tasinmazz.Business.Conrete.Services
 			};
 
 			_context.Tasinmaz.Add(yeniTasinmaz);
-			_context.SaveChanges();
+			await _context.SaveChangesAsync();
 
 			return yeniTasinmaz;
 		}
 
-		//TAŞINMAZ GÜNCELLE
-		public Tasinmaz UpdateTasinmaz(int id, [FromBody] Tasinmaz tasinmazDetails)
+		//TAŞINMAZ GÜNCELLEME
+		public async Task<Tasinmaz> UpdateTasinmazAsync(int id, [FromBody] Tasinmaz tasinmazDetails)
 		{
-			var yeniTasinmaz = _context.Tasinmaz.FirstOrDefault(
-				x => x.Id == id);
-			yeniTasinmaz.MahalleId = tasinmazDetails.MahalleId;
-			yeniTasinmaz.Ada = tasinmazDetails.Ada;
-			yeniTasinmaz.Parsel = tasinmazDetails.Parsel;
-			yeniTasinmaz.Nitelik = tasinmazDetails.Nitelik;
-			yeniTasinmaz.KoordinatBilgileri = tasinmazDetails.KoordinatBilgileri;
-			_context.SaveChanges();
-			return yeniTasinmaz;
-		}
-
-		//TAŞINMAZ SİL
-		public Tasinmaz DeleteTasinmaz(int id)
-		{
-			
-			var SilinecekTasinmaz = _context.Tasinmaz.FirstOrDefault(
-				x => x.Id == id);
-			if(SilinecekTasinmaz == null)
+			var mevcutTasinmaz = await _context.Tasinmaz.FirstOrDefaultAsync(x => x.Id == id);
+			if (mevcutTasinmaz != null)
 			{
-				return null;
+				mevcutTasinmaz.MahalleId = tasinmazDetails.MahalleId;
+				mevcutTasinmaz.Ada = tasinmazDetails.Ada;
+				mevcutTasinmaz.Parsel = tasinmazDetails.Parsel;
+				mevcutTasinmaz.Nitelik = tasinmazDetails.Nitelik;
+				mevcutTasinmaz.KoordinatBilgileri = tasinmazDetails.KoordinatBilgileri;
+
+				await _context.SaveChangesAsync();
 			}
-			
-			_context.Remove(SilinecekTasinmaz);
-			_context.SaveChanges();
-			return SilinecekTasinmaz;
+			return mevcutTasinmaz;
 		}
 
-		//ADALARI LİSTELE
-		[HttpGet("GetAda")]
-		public List<string> GetAllAda()
+		//TAŞINMAZ SİLME
+		public async Task<Tasinmaz> DeleteTasinmazAsync(int id)
 		{
-			return _context.Tasinmaz.Select(x => x.Ada).ToList();
+			var silinecekTasinmaz = await _context.Tasinmaz.FirstOrDefaultAsync(x => x.Id == id);
+			if (silinecekTasinmaz != null)
+			{
+				_context.Tasinmaz.Remove(silinecekTasinmaz);
+				await _context.SaveChangesAsync();
+			}
+			return silinecekTasinmaz;
 		}
-
-		//NİTELİKLERİ LİSTELE
-		[HttpGet("GetNitelik")]
-		public List<string> GetAllNitelik()
-		{
-			return _context.Tasinmaz.Select(x => x.Nitelik).ToList();
-		}
-
-		//PARSELLERİ LİSTELE
-		[HttpGet("GetParsel")]
-		public List<string> GetAllParsel()
-		{
-			return _context.Tasinmaz.Select(x => x.Parsel).ToList();
-		}
-
-
 	}
 }

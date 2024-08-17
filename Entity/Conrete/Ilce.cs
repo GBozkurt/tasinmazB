@@ -5,12 +5,12 @@ namespace tasinmazz.Entity.Conrete
 {
 	public class Ilce
 	{
-		public int Id { get; set; }
+		public int? Id { get; set; }
 		[NotNull]
 		public string IlceAdi { get; set; }
 		[ForeignKey("IlId")]
 		[NotNull]
-		public int IlId { get; set; }
+		public int? IlId { get; set; }
 		public virtual Il Il { get; set; }
 	}
 }
